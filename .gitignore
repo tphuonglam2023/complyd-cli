@@ -1,0 +1,17 @@
+build/
+bin/
+*.o
+*.a
+*.so
+complyd-scan
+complyd-scan-*
+grc-scan
+grc-scan-*
+CMakeCache.txt
+CMakeFiles/
+.DS_Store
+*.log
+*.json
+*.html
+.aws/
+credentials
