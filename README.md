@@ -39,7 +39,98 @@ Complyd is a compliance automation company dedicated to simplifying security and
 
 ---
 
-## Requirements
+## Installation
+
+Choose the method that best fits your environment:
+
+| Method | Best for | Requires |
+|---|---|---|
+| 🐳 **Docker** (recommended) | Any OS — Ubuntu, macOS, Windows | Docker only |
+| 🔧 **Native build** | Linux / Ubuntu with compiler | g++ + make |
+
+---
+
+## 🐳 Method 1 — Docker (Recommended)
+
+> **Works on Ubuntu, macOS (Intel & Apple Silicon), and Windows — no compiler needed.**
+
+### Step 1 — Install Docker
+
+| Platform | Command / Link |
+|---|---|
+| Ubuntu / Debian | `sudo apt install docker.io docker-compose-plugin` |
+| macOS | [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) |
+| Windows | [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) |
+
+### Step 2 — Clone the repository
+
+```bash
+git clone https://github.com/tphuonglam2023/complyd-cli.git
+cd complyd-cli
+```
+
+### Step 3 — Build the Docker image
+
+```bash
+make docker
+```
+
+This compiles all binaries inside a clean Ubuntu 22.04 container and produces the `complyd:latest` image. No compiler installation needed on your machine.
+
+> **Apple Silicon (M1/M2/M3)?** Use the multi-arch build:
+> ```bash
+> make docker-multiarch
+> ```
+
+### Step 4 — Run the tests inside Docker
+
+```bash
+# Run System Audit scanner (Auto-Update + SSH Key Audit + Unapproved Software)
+make docker-run
+
+# Run all 5 scanners in sequence
+make docker-test
+
+# Run a specific scanner
+docker run --rm complyd bin/complyd-hipaa
+docker run --rm complyd bin/complyd-iso27001
+docker run --rm complyd bin/complyd-iso27002
+docker run --rm complyd bin/complyd-apps
+docker run --rm complyd bin/complyd-sysaudit
+```
+
+### Step 5 — Scan your own config file
+
+```bash
+# Mount a local YAML file and scan it
+docker run --rm \
+  -v $(pwd)/myconfig.yaml:/scan/myconfig.yaml \
+  complyd bin/complyd /scan/myconfig.yaml
+
+# Or use the built-in compliant fixture
+docker run --rm complyd bin/complyd tests/fixtures/compliant/config-full-compliant.yaml
+```
+
+### Transfer the image offline (no internet on target machine)
+
+```bash
+# On source machine — export image to file
+make docker-save
+# produces: complyd-docker.tar.gz
+
+# Copy to target machine (scp, USB, etc.)
+scp complyd-docker.tar.gz user@target-machine:~/
+
+# On target machine — load and run
+docker load < complyd-docker.tar.gz
+docker run --rm complyd
+```
+
+---
+
+## 🔧 Method 2 — Native Build (Linux / Ubuntu)
+
+### Requirements
 
 - **g++** (C++17 or later)
 - **make**
@@ -52,18 +143,14 @@ sudo apt install g++ make
 sudo dnf install gcc-c++ make
 ```
 
----
-
-## Quick Start
-
-### 1. Clone the repository
+### Step 1 — Clone the repository
 
 ```bash
 git clone https://github.com/tphuonglam2023/complyd-cli.git
 cd complyd-cli
 ```
 
-### 2. Build all binaries
+### Step 2 — Build all binaries
 
 ```bash
 make all
@@ -376,126 +463,6 @@ complyd-cli/
 ├── examples/
 └── Makefile
 ```
-
----
-
-## Docker — Run on Any Platform
-
-Docker is the recommended way to run Complyd Scanner on **any OS** (Ubuntu, macOS, Windows) without installing a compiler.
-
-### Prerequisites
-
-| Platform | Install |
-|---|---|
-| Ubuntu / Debian | `sudo apt install docker.io docker-compose-plugin` |
-| macOS (Intel & Apple Silicon) | [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) |
-| Windows | [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) |
-
----
-
-### Step 1 — Build the image
-
-```bash
-# Clone the repo (if you haven't already)
-git clone https://github.com/tphuonglam2023/complyd-cli.git
-cd complyd-cli
-
-# Build the Docker image (compiles everything inside the container)
-make docker
-# or directly:
-docker build -t complyd .
-```
-
-> **Apple Silicon (M1/M2/M3)?** Use the multi-arch build to get a native ARM64 image:
-> ```bash
-> make docker-multiarch
-> ```
-
----
-
-### Step 2 — Run the scanners
-
-```bash
-# System Audit (Auto-Update + SSH Key Audit + Unapproved Software)
-docker run --rm complyd
-
-# HIPAA only
-docker run --rm complyd bin/complyd-hipaa
-
-# ISO 27001 only
-docker run --rm complyd bin/complyd-iso27001
-
-# ISO 27002 only
-docker run --rm complyd bin/complyd-iso27002
-
-# Application Security only
-docker run --rm complyd bin/complyd-apps
-
-# Run all scanners in sequence
-make docker-test
-```
-
----
-
-### Step 3 — Scan your own config file
-
-Mount a local file into the container using `-v`:
-
-```bash
-# Scan a local YAML file
-docker run --rm \
-  -v $(pwd)/myconfig.yaml:/scan/myconfig.yaml \
-  complyd bin/complyd /scan/myconfig.yaml
-
-# Scan a local Markdown file
-docker run --rm \
-  -v $(pwd)/security-policy.md:/scan/security-policy.md \
-  complyd bin/complyd /scan/security-policy.md
-```
-
----
-
-### Using Docker Compose (easier)
-
-```bash
-# Run System Audit scanner
-docker compose run sysaudit
-
-# Run HIPAA scanner
-docker compose run hipaa
-
-# Scan a local config file (path inside container is /scan/<filename>)
-docker compose run scanner /scan/examples/markdown/security-config.md
-```
-
----
-
-### Transfer the image offline (no internet needed)
-
-```bash
-# On the source machine — save image to a file
-make docker-save
-# produces: complyd-docker.tar.gz
-
-# Copy the file to the target machine (scp, USB, etc.)
-scp complyd-docker.tar.gz user@target-machine:~/
-
-# On the target machine — load and run
-docker load < complyd-docker.tar.gz
-docker run --rm complyd
-```
-
----
-
-### Docker compatibility matrix
-
-| Platform | Architecture | Works? |
-|---|---|---|
-| Ubuntu 20.04 / 22.04 / 24.04 | x86_64 (amd64) | ✅ |
-| macOS Intel | x86_64 (amd64) | ✅ |
-| macOS Apple Silicon M1/M2/M3 | arm64 | ✅ (use `make docker-multiarch`) |
-| Windows 10/11 (Docker Desktop) | x86_64 (amd64) | ✅ |
-| Raspberry Pi / ARM servers | arm64 | ✅ (use `make docker-multiarch`) |
 
 ---
 
