@@ -1,5 +1,5 @@
-test_name: "Full HIPAA Compliant Configuration"
-description: "This configuration passes all 8 HIPAA compliance checks"
+test_name: "Full Compliant Configuration"
+description: "This configuration passes all HIPAA, Auto-Update, SSH Key Audit, and Unapproved Software checks"
 
 security:
   encryption_at_rest:
@@ -42,3 +42,41 @@ security:
     auto_logoff: enabled
     session_timeout: 15
     idle_timeout: 900
+
+auto_update:
+  auto_update: enabled
+  automatic_updates: true
+  unattended_upgrades: enabled
+  security_updates_only: true
+  update_type: security
+  update_schedule: weekly
+  maintenance_window: sunday-02:00
+  reboot_after_update: true
+  auto_reboot: scheduled
+  update_notifications: enabled
+  patch_alerts: true
+
+ssh_hardening:
+  ssh_password_auth: disabled
+  password_authentication: false
+  ssh_root_login: disabled
+  permit_root_login: false
+  ssh_key_rotation: enabled
+  key_rotation_days: 90
+  ssh_key_algorithm: ed25519
+  strong_ssh_keys: true
+  ssh_passphrase_required: true
+  authorized_keys_managed: true
+  ssh_ca: enabled
+
+software_controls:
+  software_whitelist: enabled
+  application_allowlist: true
+  software_inventory: enabled
+  asset_inventory: maintained
+  software_install_policy: restricted
+  admin_only_install: true
+  software_scan: enabled
+  unapproved_software_scan: true
+  software_removal_policy: defined
+  auto_remove_unapproved: true

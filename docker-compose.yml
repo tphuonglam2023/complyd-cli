@@ -1,0 +1,62 @@
+# ============================================================================
+#  Complyd Scanner – Docker Compose
+#
+#  Usage:
+#    docker compose run sysaudit              # Auto-Update + SSH + Software
+#    docker compose run hipaa                 # HIPAA checks
+#    docker compose run iso27001              # ISO 27001 checks
+#    docker compose run iso27002              # ISO 27002 checks
+#    docker compose run apps                  # Application Security checks
+#    docker compose run scanner /scan/my.yaml # Scan a local config file
+# ============================================================================
+
+services:
+
+  # ── System Audit: Auto-Update + SSH Key Audit + Unapproved Software ────────
+  sysaudit:
+    build: .
+    image: complyd:latest
+    command: bin/complyd-sysaudit
+    volumes:
+      - ./:/scan:ro          # mount project root so local files are accessible
+
+  # ── HIPAA compliance scanner ───────────────────────────────────────────────
+  hipaa:
+    build: .
+    image: complyd:latest
+    command: bin/complyd-hipaa
+    volumes:
+      - ./:/scan:ro
+
+  # ── ISO 27001 scanner ──────────────────────────────────────────────────────
+  iso27001:
+    build: .
+    image: complyd:latest
+    command: bin/complyd-iso27001
+    volumes:
+      - ./:/scan:ro
+
+  # ── ISO 27002 scanner ──────────────────────────────────────────────────────
+  iso27002:
+    build: .
+    image: complyd:latest
+    command: bin/complyd-iso27002
+    volumes:
+      - ./:/scan:ro
+
+  # ── Application Security scanner ──────────────────────────────────────────
+  apps:
+    build: .
+    image: complyd:latest
+    command: bin/complyd-apps
+    volumes:
+      - ./:/scan:ro
+
+  # ── Main scanner: scan a config file (pass path as argument) ───────────────
+  #    Example: docker compose run scanner /scan/examples/markdown/security-config.md
+  scanner:
+    build: .
+    image: complyd:latest
+    entrypoint: bin/complyd
+    volumes:
+      - ./:/scan:ro          # local files available under /scan/ inside container
